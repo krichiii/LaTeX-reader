@@ -1,0 +1,2 @@
+-r ../training/requirements.txt
+flask>=3.1
