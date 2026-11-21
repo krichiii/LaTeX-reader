@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LaTeX Reader</title>
+  <meta name="description" content="Convert images of printed formulas into LaTeX.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b5bdb'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' fill='white' text-anchor='middle'%3E%E2%88%91%3C/text%3E%3C/svg%3E">
+  <!-- KaTeX renders the preview. Its script is loaded by app.js so a slow or missing CDN never blocks the page. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">&sum;</span>
+      <div>
+        <h1>LaTeX Reader</h1>
+        <p class="tagline">Turn images of printed formulas into LaTeX</p>
+      </div>
+    </div>
+    <div class="server" id="server" data-state="checking" role="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="server-text">Connecting to the server&hellip;</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Upload -->
+    <section class="panel" aria-labelledby="upload-title">
+      <div class="panel-head">
+        <h2 id="upload-title">Images</h2>
+        <span class="count" id="file-count"></span>
+      </div>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0"
+           aria-label="Add images: drop files here or press Enter to browse" aria-describedby="drop-hint">
+        <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+        </svg>
+        <p class="drop-title"><strong>Drop images here</strong> or <span class="link">browse files</span></p>
+        <p class="drop-hint" id="drop-hint">PNG, JPG, WebP, BMP &middot; or paste a screenshot with Ctrl+V</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" multiple hidden>
+
+      <ul class="file-list" id="file-list" hidden></ul>
+
+      <div class="actions">
+        <button class="btn primary" id="convert-btn" type="button" disabled title="Ctrl+Enter">Convert</button>
+        <button class="btn" id="clear-btn" type="button" disabled>Clear</button>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section class="panel" aria-labelledby="result-title">
+      <div class="panel-head">
+        <h2 id="result-title">Result</h2>
+        <div class="tools">
+          <div class="segmented" role="group" aria-label="View">
+            <button type="button" data-view="text" aria-pressed="true">Text</button>
+            <button type="button" data-view="preview" aria-pressed="false">Preview</button>
+          </div>
+          <select id="format-select" class="select" aria-label="Output format">
+            <option value="latex">LaTeX</option>
+            <option value="markdown">Markdown</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-body">
+        <textarea id="output" class="output" spellcheck="false" aria-label="Converted text"
+                  placeholder="The converted text will appear here.&#10;&#10;Add images on the left and press Convert."></textarea>
+        <div id="preview" class="preview" hidden></div>
+      </div>
+
+      <div class="actions">
+        <span class="meta" id="result-meta"></span>
+        <button class="btn" id="copy-btn" type="button" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>
+          </svg>
+          <span id="copy-label">Copy</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

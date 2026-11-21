@@ -73,8 +73,9 @@ Measured train-step time drove these choices:
 
 ## Results
 
-The model in `runs/default` has 2.05M parameters. It trained for 10 epochs on the CPU
-(Ryzen 5 4600H), which took about 9 hours.
+The model in `runs/default` has 2.05M parameters. It trained for 10 epochs on the GPU via 
+WSL2 enviroment (RTX 3050 Mobile)(due to enviroment's specifics, it can only use ~1.7GB out 
+of 4GB of VRAM), which took about 4 hours.
 
 **Test split** (9,441 images, single-scale, `runs/default/test_metrics.json`):
 
