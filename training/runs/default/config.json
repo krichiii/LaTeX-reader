@@ -1,0 +1,10 @@
+{
+  "vocab_size": 515,
+  "d_model": 192,
+  "num_heads": 6,
+  "encoder_layers": 0,
+  "decoder_layers": 3,
+  "ff_dim": 512,
+  "dropout": 0.1,
+  "max_positions": 152
+}
