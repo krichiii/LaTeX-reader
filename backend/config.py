@@ -10,7 +10,7 @@ PROJECT_DIR = BACKEND_DIR.parent
 TRAINING_DIR = PROJECT_DIR / "training"
 
 # The model trained on the RTX 3050 in WSL (batch size 16, 10 epochs).
-DEFAULT_RUN_DIR = TRAINING_DIR / "runs_wsl" / "train16"
+DEFAULT_RUN_DIR = TRAINING_DIR / "runs" / "default"
 
 
 def _int(name: str, default: int) -> int:
