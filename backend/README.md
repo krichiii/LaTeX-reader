@@ -4,7 +4,7 @@ A Flask API that serves the trained formula reader: an image of a printed formul
 in, and LaTeX and Markdown come out. It is meant to be called by the frontend.
 
 The model code is not copied here. The backend imports `latex_ocr` from `../training`
-and loads the GPU-trained run `training/runs_wsl/train16`.
+and loads the GPU-trained run `training/runs/default`.
 
 ## Run
 
@@ -22,7 +22,7 @@ takes about 10 seconds. Options:
 |---|---|---|
 | `--host` | `127.0.0.1` | `0.0.0.0` makes it reachable from other devices |
 | `--port` | `5000` | |
-| `--run-dir` | `training/runs_wsl/train16` | serve another training run, e.g. `../training/runs/default` |
+| `--run-dir` | `training/runs/default` | serve another training run |
 | `--debug` | off | Flask debug mode |
 
 `flask --app app run` works too.
@@ -32,6 +32,27 @@ weights were made. On native Windows TensorFlow runs on the CPU, and a predictio
 about 0.2–3 s. To predict on the GPU, run the backend inside WSL with the venv activated
 (`source ~/venvs/data/bin/activate`). Flask is not installed in that venv yet
 (`pip install flask`). `GET /api/model` reports which device is in use.
+
+### Docker
+
+`compose.yaml` in `kurs/` runs the backend and the frontend together:
+
+```
+cd kurs
+docker compose up --build        # then open http://localhost:8080
+```
+
+- `backend/Dockerfile` builds from `kurs/`, because it needs `training/latex_ocr`. It copies
+  only the model code and `training/runs/default`, never the dataset
+  (`backend/Dockerfile.dockerignore`). The image is about 3.4 GB, mostly TensorFlow.
+- The backend runs on the CPU under gunicorn, with one worker so the model is loaded once.
+  It reports healthy once `/api/health` answers, about 10 s after start. The CUDA warnings
+  in its log are expected.
+- The frontend container is nginx. It serves the page on port 8080 and forwards `/api` to
+  the backend, so the page and the API share one origin.
+- The API is also published at `http://127.0.0.1:5000` for direct calls.
+- To serve another run, mount it and set `LATEX_OCR_RUN_DIR` (commented example in
+  `compose.yaml`). The settings below work as environment variables there too.
 
 ### Settings
 
@@ -172,8 +193,8 @@ load the real model and read demo images from `training/runs/default/demo/images
 
 | Run | Trained on | Test exact match | Test edit similarity |
 |---|---|---|---|
-| `training/runs_wsl/train16` (served) | RTX 3050, batch 16 | **45.4%** | **0.932** |
-| `training/runs/default` | CPU, batch 32 | 40.1% | 0.917 |
+| `training/runs/default (wsl)` (served) | RTX 3050, batch 16 | **45.4%** | **0.932** |
+| `training/runs/default (old)` | CPU, batch 32 | 40.1% | 0.917 |
 
 On the test split the GPU run is clearly better. On the 10 Computer Modern formulas
 rendered with matplotlib in `demo/images`, it was worse with multi-scale reading: 2

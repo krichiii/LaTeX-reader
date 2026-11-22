@@ -32,6 +32,11 @@ The page loads Material Web, KaTeX and its fonts (Google Fonts) from CDNs, so it
 internet connection. Without one, the controls show as unstyled text, the preview does
 not render, and the page falls back to system fonts.
 
+To run the page and the backend in Docker, use `docker compose up --build` in `kurs/` and
+open `http://localhost:8080` (see "Docker" in `../backend/README.md`). In that image nginx
+serves the page, `config.docker.js` replaces `config.js`, and `/api` goes to the backend
+container.
+
 ### Backend address
 
 The default is `http://127.0.0.1:5000`, set in `config.js`. You can override it for a
@@ -88,6 +93,7 @@ The chosen view, format and color scheme are remembered in the browser's local s
 | `styles.css` | M3 color, type and shape tokens, dark mode, and the narrow-screen layout |
 | `app.js` | uploads, requests to the backend, rendering, copying |
 | `config.js` | backend address |
+| `Dockerfile`, `nginx.conf`, `config.docker.js` | the nginx image used by `../compose.yaml` |
 
 `app.js` is a classic script, not an ES module, because Chrome and Edge block module
 scripts on pages opened from `file://`.

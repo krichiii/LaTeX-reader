@@ -1,0 +1,12 @@
+# Ignore rules for backend/Dockerfile, whose build context is kurs/.
+# Everything is excluded except what the image copies.
+*
+!training/requirements.txt
+!training/latex_ocr/
+!training/runs/default/best.weights.h5
+!training/runs/default/config.json
+!training/runs/default/vocab.json
+!training/runs/default/test_metrics.json
+!backend/requirements.txt
+!backend/*.py
+**/__pycache__

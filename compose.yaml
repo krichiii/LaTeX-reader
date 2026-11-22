@@ -1,0 +1,25 @@
+# LaTeX Reader: docker compose up --build, then open http://localhost:8080
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: latex-reader-backend
+    # Optional: serve another run by mounting it and pointing the backend at it.
+    # volumes:
+    #   - ./training/runs/other:/models/other:ro
+    # environment:
+    #   LATEX_OCR_RUN_DIR: /models/other
+    ports:
+      # Direct API access from this machine only; the page goes through the frontend.
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: latex-reader-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
