@@ -75,7 +75,10 @@ The preview always renders what is in the text box, so your edits appear there.
 Changing the format, or adding or removing results, rebuilds the text from the model's
 output and **discards manual edits**.
 
-The chosen view and format are remembered in the browser's local storage.
+The moon/sun button in the top bar switches between the light and dark color schemes.
+Until you use it, the page follows the system setting.
+
+The chosen view, format and color scheme are remembered in the browser's local storage.
 
 ## Files
 

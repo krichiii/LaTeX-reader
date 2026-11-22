@@ -33,6 +33,8 @@
     server: $("server"),
     serverText: $("server-text"),
     toast: $("toast"),
+    themeBtn: $("theme-btn"),
+    themeColor: $("theme-color"),
   };
 
   /**
@@ -64,6 +66,33 @@
 
   function saveSetting(key, value) {
     try { localStorage.setItem(`latex-reader.${key}`, value); } catch { /* storage blocked */ }
+  }
+
+  // ---------- Color scheme ----------
+
+  // The inline script in index.html already set data-theme before the first paint.
+  const systemDark = matchMedia("(prefers-color-scheme: dark)");
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    els.themeColor.content = theme === "dark" ? "#111413" : "#edeeec";
+    els.themeBtn.toggleAttribute("selected", theme === "dark");
+  }
+
+  function bindTheme() {
+    applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+
+    els.themeBtn.addEventListener("change", () => {
+      const theme = els.themeBtn.selected ? "dark" : "light";
+      saveSetting("theme", theme);
+      applyTheme(theme);
+    });
+
+    // Until the button is used, follow the system setting when it changes.
+    systemDark.addEventListener("change", (event) => {
+      if (loadSetting("theme", ["", "light", "dark"])) return;
+      applyTheme(event.matches ? "dark" : "light");
+    });
   }
 
   // ---------- Helpers ----------
@@ -673,6 +702,7 @@
 
   bindUpload();
   bindControls();
+  bindTheme();
   renderFiles();
   refreshOutput();
   setServer("checking");
