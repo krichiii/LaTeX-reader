@@ -140,7 +140,7 @@ class OcrService:
             "parameters": int(model.count_params()),
             "config": asdict(model.config),
             "test_metrics": self._test_metrics,
-            "device": "GPU" if self._devices else "CPU",
+            "device": "GPU" if self._devices else "default",
             "gpus": self._devices,
             "tensorflow": self._tf_version,
             "load_seconds": self.load_seconds,

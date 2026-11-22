@@ -52,7 +52,7 @@ class FakeService:
                        elapsed_ms=1)
 
     def info(self):
-        return {"run": "fake", "device": "CPU"}
+        return {"run": "fake", "device": "default"}
 
 
 class ApiTests(unittest.TestCase):
@@ -213,7 +213,7 @@ class ModelTests(unittest.TestCase):
         info = self.client.get("/api/model").get_json()
         self.assertEqual(info["run"], Config.RUN_DIR.name)
         self.assertEqual(info["parameters"], 2_052_731)
-        self.assertIn(info["device"], ("CPU", "GPU"))
+        self.assertIn(info["device"], ("default", "GPU"))
 
     def test_reads_formula(self):
         body = self.predict("euler_cm_100.png").get_json()

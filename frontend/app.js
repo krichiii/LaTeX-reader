@@ -23,8 +23,12 @@
     preview: $("preview"),
     copyBtn: $("copy-btn"),
     copyLabel: $("copy-label"),
+    copyIcon: $("copy-icon"),
     formatSelect: $("format-select"),
-    viewButtons: document.querySelectorAll("[data-view]"),
+    viewTabs: $("view-tabs"),
+    progress: $("progress"),
+    empty: $("empty"),
+    specimen: $("specimen"),
     resultMeta: $("result-meta"),
     server: $("server"),
     serverText: $("server-text"),
@@ -39,6 +43,7 @@
     items: [],
     nextId: 1,
     converting: false,
+    runDone: 0, // images finished in the current run, for the progress bar
     controller: null,
     view: loadSetting("view", ["text", "preview"]),
     format: loadSetting("format", ["latex", "markdown"]),
@@ -77,6 +82,22 @@
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text != null) node.textContent = text;
+    return node;
+  }
+
+  // Material Symbols paths, inlined so icons need no icon font.
+  const ICONS = {
+    close: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z",
+    copy: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z",
+    check: "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z",
+    warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
+    error: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z",
+  };
+
+  function icon(name, slot) {
+    const node = el("md-icon");
+    if (slot) node.slot = slot;
+    node.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`;
     return node;
   }
 
@@ -193,6 +214,7 @@
     const controller = new AbortController();
     state.controller = controller;
     state.converting = true;
+    state.runDone = 0;
     renderFiles();
 
     // The backend reads one image at a time anyway, so images go one by one and
@@ -204,11 +226,13 @@
       try {
         item.result = await predict(item.file, controller.signal);
         item.status = "done";
+        state.runDone++;
         refreshOutput();
       } catch (error) {
         if (error.name === "AbortError") break;
         item.status = "error";
         item.error = error.message;
+        state.runDone++;
         if (error instanceof NetworkError) {
           // Every other request would fail the same way.
           for (const other of state.items) if (other.status === "queued") other.status = "pending";
@@ -270,6 +294,8 @@
     error: { label: "Failed", tone: "err" },
   };
 
+  const BADGE_ICONS = { ok: "check", warn: "warning", err: "error" };
+
   function warningsFor(result) {
     const warnings = [];
     if (!result.complete) warnings.push("The model did not finish this formula, so it is likely wrong.");
@@ -279,27 +305,31 @@
   }
 
   function createRow(item) {
-    const row = el("li", "file");
+    const row = el("md-list-item", "file");
     const thumb = el("img", "thumb");
+    thumb.slot = "start";
     thumb.src = item.url;
     thumb.alt = "";
     thumb.loading = "lazy";
 
-    const main = el("div", "file-main");
-    const name = el("div", "file-name", item.file.name);
+    const name = el("span", "file-name", item.file.name);
+    name.slot = "headline";
     name.title = item.file.name;
+
+    const details = el("div", "file-details");
+    details.slot = "supporting-text";
     const meta = el("div", "file-meta");
     meta.append(el("span", "size", formatSize(item.file.size)), el("span", "badge"));
-    main.append(name, meta, el("code", "file-latex"), el("p", "file-note"));
+    details.append(meta, el("code", "file-latex"), el("p", "file-note"));
 
-    const remove = el("button", "icon-btn remove");
-    remove.type = "button";
+    const remove = el("md-icon-button", "remove");
+    remove.slot = "end";
     remove.setAttribute("aria-label", `Remove ${item.file.name}`);
     remove.title = "Remove";
-    remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    remove.append(icon("close"));
     remove.addEventListener("click", () => removeItem(item.id));
 
-    row.append(thumb, main, remove);
+    row.append(thumb, name, details, remove);
     return row;
   }
 
@@ -329,7 +359,14 @@
     row.dataset.tone = tone;
     badge.dataset.tone = tone;
     badge.replaceChildren();
-    if (item.status === "working") badge.append(el("span", "spinner"));
+    if (item.status === "working") {
+      const spinner = el("md-circular-progress");
+      spinner.indeterminate = true;
+      spinner.setAttribute("aria-hidden", "true");
+      badge.append(spinner);
+    } else if (BADGE_ICONS[tone]) {
+      badge.append(icon(BADGE_ICONS[tone]));
+    }
     badge.append(label);
 
     const text = item.status === "done" ? item.result.latex : "";
@@ -369,6 +406,10 @@
     els.convertBtn.disabled = state.converting || !todo;
     els.clearBtn.disabled = !items.length;
     els.clearBtn.textContent = state.converting ? "Stop & clear" : "Clear";
+
+    // Progress of the current run. Images added during a run join it.
+    els.progress.hidden = !state.converting;
+    els.progress.value = state.converting ? state.runDone / (state.runDone + left || 1) : 0;
   }
 
   // ---------- Rendering: result ----------
@@ -383,8 +424,8 @@
 
   function renderResult() {
     const preview = state.view === "preview";
-    for (const button of els.viewButtons) {
-      button.setAttribute("aria-pressed", String(button.dataset.view === state.view));
+    for (const tab of els.viewTabs.querySelectorAll("[data-view]")) {
+      tab.active = tab.dataset.view === state.view;
     }
     els.formatSelect.value = state.format;
     els.output.hidden = preview;
@@ -396,6 +437,7 @@
   function updateResultMeta() {
     const text = els.output.value;
     els.copyBtn.disabled = !text.trim();
+    els.empty.hidden = state.view !== "text" || text.length > 0;
     const blocks = splitBlocks(text).filter((block) => block.type === "math").length;
     els.resultMeta.textContent = blocks ? plural(blocks, "formula") : "";
   }
@@ -481,7 +523,15 @@
     const script = document.createElement("script");
     script.src = KATEX_JS;
     script.crossOrigin = "anonymous";
-    script.onload = () => { state.katex = window.katex ? "ready" : "failed"; renderResult(); };
+    script.onload = () => {
+      state.katex = window.katex ? "ready" : "failed";
+      if (window.katex) {
+        try {
+          window.katex.render(String.raw`\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}`, els.specimen, { displayMode: true });
+        } catch { /* keep the plain-text specimen */ }
+      }
+      renderResult();
+    };
     script.onerror = () => { state.katex = "failed"; renderResult(); };
     document.head.append(script);
   }
@@ -500,12 +550,12 @@
         return;
       }
     }
-    els.copyBtn.classList.add("copied");
     els.copyLabel.textContent = "Copied";
+    els.copyIcon.replaceWith(els.copyIcon = icon("check", "icon"));
     clearTimeout(copyTimer);
     copyTimer = setTimeout(() => {
-      els.copyBtn.classList.remove("copied");
       els.copyLabel.textContent = "Copy";
+      els.copyIcon.replaceWith(els.copyIcon = icon("copy", "icon"));
     }, 1600);
   }
 
@@ -595,13 +645,13 @@
     els.clearBtn.addEventListener("click", clearAll);
     els.copyBtn.addEventListener("click", copyOutput);
 
-    for (const button of els.viewButtons) {
-      button.addEventListener("click", () => {
-        state.view = button.dataset.view;
-        saveSetting("view", state.view);
-        renderResult();
-      });
-    }
+    els.viewTabs.addEventListener("change", () => {
+      const view = els.viewTabs.activeTab?.dataset.view;
+      if (!view || view === state.view) return;
+      state.view = view;
+      saveSetting("view", state.view);
+      renderResult();
+    });
 
     els.formatSelect.addEventListener("change", () => {
       state.format = els.formatSelect.value;

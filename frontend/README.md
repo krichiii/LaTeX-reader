@@ -4,6 +4,9 @@ A single page for the formula reader: add images of formulas, convert them, and 
 the LaTeX. It calls the backend in `../backend`.
 
 It is plain HTML, CSS and JavaScript. There is no build step and nothing to install.
+The interface follows [Material Design 3](https://m3.material.io) and uses the
+[Material Web](https://github.com/material-components/material-web) components (buttons,
+list, tabs, select, progress), loaded from the jsDelivr CDN.
 
 ## Run
 
@@ -25,8 +28,9 @@ It is plain HTML, CSS and JavaScript. There is no build step and nothing to inst
 The badge in the top right turns green and names the model once the backend answers.
 Until then it says "Server offline" and checks again every 5 seconds.
 
-The preview loads KaTeX from the jsDelivr CDN, so it needs an internet connection.
-The Text view, conversion and copying work offline.
+The page loads Material Web, KaTeX and its fonts (Google Fonts) from CDNs, so it needs an
+internet connection. Without one, the controls show as unstyled text, the preview does
+not render, and the page falls back to system fonts.
 
 ### Backend address
 
@@ -41,6 +45,7 @@ opened from disk sends the origin `null`, so it only works with `*`.
 
 **Images panel**
 
+- While images convert, a progress bar under the panel title shows how far the run is.
 - Add images by dropping them on the dashed area, by clicking it to open the file
   picker, or by pasting a screenshot with Ctrl+V. Files that are not images, and files
   already in the list, are skipped.
@@ -77,7 +82,7 @@ The chosen view and format are remembered in the browser's local storage.
 | File | |
 |---|---|
 | `index.html` | page structure |
-| `styles.css` | styles, including dark mode and the narrow-screen layout |
+| `styles.css` | M3 color, type and shape tokens, dark mode, and the narrow-screen layout |
 | `app.js` | uploads, requests to the backend, rendering, copying |
 | `config.js` | backend address |
 
